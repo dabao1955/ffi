@@ -6,6 +6,11 @@ A purego binding for libffi.
 ## Purpose
 You can use [purego](https://github.com/ebitengine/purego) to call C code without cgo. ffi provides extra functionality (e.g. passing and returning structs by value).
 
+## Installation
+```sh
+go get github.com/jupiterrider/ffi@latest
+```
+
 ## Supported OS/Architecture
 - darwin/amd64
 - darwin/arm64
