@@ -133,3 +133,48 @@ jobs:
           qemu-riscv64 ./item
           go build -o callback examples/closures/callback/main.go
           qemu-riscv64 ./callback
+  run-examples-linux-loongarch64:
+    runs-on: ubuntu-latest
+    container: debian:sid # ubuntu not package gcc-loongarch64-linux-gnu
+    env:
+      LD_LIBRARY_PATH: libffi/loongarch64-unknown-linux-gnu/.libs/
+      QEMU_LD_PREFIX: /usr/loongarch64-linux-gnu
+      GOARCH: loong64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 1.25.x
+      - name: Install dependencies
+        run: |
+          apt update
+          apt install -y autoconf automake build-essential gcc-loongarch64-linux-gnu libtool qemu-user texinfo libltdl-dev git
+      - name: Clone and build libffi
+        run: |
+          git clone https://github.com/libffi/libffi.git
+          cd libffi
+          git checkout v3.5.2
+          ./autogen.sh
+          ./configure --host=loongarch64-linux-gnu CC=loongarch64-linux-gnu-gcc
+          make
+      - name: Build dynamic library
+        run: |
+          loongarch64-linux-gnu-gcc -shared -o libitem.so -fPIC examples/structs/item/item.c
+          loongarch64-linux-gnu-gcc -shared -o libcallback.so -fPIC examples/closures/callback/callback.c
+      - name: Run testable examples
+        run: |
+          ln -sf /usr/loongarch64-linux-gnu/lib/ld-linux-loongarch64-lp64d.so.1 /lib/ld.so.1
+          go test -c -o test
+          qemu-loongarch64 ./test -test.v
+      - name: Run examples
+        run: |
+          go build -o cos examples/simple/cos/main.go
+          qemu-loongarch64 ./cos
+          go build -o libc examples/varargs/libc/main.go
+          qemu-loongarch64 ./libc
+          go build -o item examples/structs/item/main.go
+          qemu-loongarch64 ./item
+          go build -o callback examples/closures/callback/main.go
+          qemu-loongarch64 ./callback
